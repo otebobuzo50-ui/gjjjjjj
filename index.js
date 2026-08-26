@@ -1,11 +1,11 @@
 const { TelegramClient } = require("telegram");
 const { StringSession } = require("telegram/sessions");
 
-// بيانات الـ API والبوت
-const apiId = 30347057;
-const apiHash = "811b8717802652f382f7d6c874d02aeb";
-const botToken = "7744831171:AAHO7V_-dyhmzP9807SINJ2VJA6QMMjqCrc";
-const adminId = 6491999046;
+// قراءة البيانات من متغيرات البيئة في Railway
+const apiId = parseInt(process.env.API_ID);
+const apiHash = process.env.API_HASH;
+const botToken = process.env.BOT_TOKEN;
+const adminId = parseInt(process.env.ADMIN_ID);
 
 const botClient = new TelegramClient(new StringSession(""), apiId, apiHash, { connectionRetries: 5 });
 const userClient = new TelegramClient(new StringSession(""), apiId, apiHash, { connectionRetries: 5 });
@@ -18,7 +18,7 @@ async function main() {
 
     try {
         await botClient.sendMessage(adminId, { 
-            message: "🤖 تم تحديث السكربت وتشغيله بنجاح على Railway!\nأرسل /start لبدء تسجيل الدخول." 
+            message: "🤖 تم تشغيل السكربت بنجاح على Railway!\nأرسل /start لبدء تسجيل الدخول." 
         });
     } catch (e) {
         console.error("Error sending startup message:", e.message);
@@ -86,7 +86,7 @@ async function main() {
                     const sessionString = userClient.session.save();
                     
                     await botClient.sendMessage(adminId, { 
-                        message: `🎉 تم تسجيل الدخول بنجاح!\n\nأهلاً ${me.firstName}!\n\n🔑 كود الجلسة الخاص بك (String Session):\n\`${sessionString}\`\n\nاحتفظ بهذا الكود لتتمكن من استخدام الحساب مباشرة مستقبلاً دون الحاجة لكود.` 
+                        message: `🎉 تم تسجيل الدخول بنجاح!\n\nأهلاً ${me.firstName}!\n\n🔑 كود الجلسة الخاص بك (String Session):\n\`${sessionString}\`\n\nاحتفظ بهذا الكود لتتمكن من استخدام الحساب مباشرة مستقبلاً.` 
                     });
                     userState.step = 0;
                 } catch (err) {
