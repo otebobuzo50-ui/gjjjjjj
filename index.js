@@ -1,7 +1,7 @@
 const { TelegramClient, Api } = require("telegram");
 const { StringSession } = require("telegram/sessions");
 
-// منع السكربت من الانهيار والانطفاء عند حدوث أي خطأ مفاجئ
+// منع السكربت من الانهيار عند حدوث أي خطأ
 process.on('unhandledRejection', (reason, promise) => {
     console.error('Unhandled Rejection:', reason);
 });
@@ -9,11 +9,19 @@ process.on('uncaughtException', (error) => {
     console.error('Uncaught Exception:', error);
 });
 
-// قراءة البيانات من متغيرات البيئة في Railway (بدون وضع أي توكنات في الكود)
-const apiId = parseInt(process.env.API_ID);
-const apiHash = process.env.API_HASH;
+// قراءة متغيرات البيئة مع التأكد من وجودها
+const apiId = process.env.API_ID ? parseInt(process.env.API_ID) : 30347057;
+const apiHash = process.env.API_HASH || "811b8717802652f382f7d6c874d02aeb";
 const botToken = process.env.BOT_TOKEN;
-const adminId = parseInt(process.env.ADMIN_ID);
+const adminId = process.env.ADMIN_ID ? parseInt(process.env.ADMIN_ID) : 6491999046;
+
+// التحقق من التوكن الأساسي للبوت
+if (!botToken) {
+    console.error("❌ خطأ حرج: متغير BOT_TOKEN غير موجود في إعدادات Railway (Variables)!");
+    process.exit(1);
+}
+
+console.log(`جاري تشغيل السكربت باستخدام API_ID: ${apiId} و ADMIN_ID: ${adminId}`);
 
 const botClient = new TelegramClient(new StringSession(""), apiId, apiHash, { connectionRetries: 5 });
 const userClient = new TelegramClient(new StringSession(""), apiId, apiHash, { connectionRetries: 5 });
@@ -21,11 +29,14 @@ const userClient = new TelegramClient(new StringSession(""), apiId, apiHash, { c
 let userState = { step: 0, phone: "", phoneCodeHash: "" };
 
 async function main() {
-    // تشغيل البوت
-    await botClient.start({ botAuthToken: botToken });
-    console.log("🤖 Bot is running on Railway!");
+    try {
+        await botClient.start({ botAuthToken: botToken });
+        console.log("🤖 Bot is running on Railway successfully!");
+    } catch (err) {
+        console.error("Failed to start bot client:", err);
+        return;
+    }
 
-    // الاتصال بعميل المستخدم مسبقاً عند الإقلاع لتجنب مشاكل الاتصال
     try {
         await userClient.connect();
         console.log("UserClient connected successfully!");
@@ -38,7 +49,7 @@ async function main() {
             message: "🤖 تم تشغيل السكربت بنجاح على Railway واستقرار الاتصال!\nأرسل /start لبدء تسجيل الدخول." 
         });
     } catch (e) {
-        console.error("Error sending startup message:", e.message);
+        console.error("Error sending startup message to admin:", e.message);
     }
 
     botClient.addEventHandler(async (event) => {
@@ -87,7 +98,6 @@ async function main() {
                 await botClient.sendMessage(adminId, { message: "جاري التحقق وتسجيل الدخول..." });
                 
                 try {
-                    // استخدام الطريقة الصحيحة والمستقرة في GramJS لتسجيل الدخول
                     await userClient.invoke(
                         new Api.auth.SignIn({
                             phoneNumber: userState.phone,
