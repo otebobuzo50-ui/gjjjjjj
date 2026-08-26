@@ -1,6 +1,14 @@
 const { TelegramClient } = require("telegram");
 const { StringSession } = require("telegram/sessions");
 
+// منع السكربت من الانهيار والانطفاء عند حدوث أي خطأ مفاجئ
+process.on('unhandledRejection', (reason, promise) => {
+    console.error('Unhandled Rejection:', reason);
+});
+process.on('uncaughtException', (error) => {
+    console.error('Uncaught Exception:', error);
+});
+
 // قراءة البيانات من متغيرات البيئة في Railway
 const apiId = parseInt(process.env.API_ID);
 const apiHash = process.env.API_HASH;
@@ -13,12 +21,21 @@ const userClient = new TelegramClient(new StringSession(""), apiId, apiHash, { c
 let userState = { step: 0, phone: "", phoneCodeHash: "" };
 
 async function main() {
+    // تشغيل البوت
     await botClient.start({ botAuthToken: botToken });
     console.log("🤖 Bot is running on Railway!");
 
+    // الاتصال بعميل المستخدم مسبقاً عند الإقلاع لتجنب مشاكل الاتصال
+    try {
+        await userClient.connect();
+        console.log("UserClient connected successfully!");
+    } catch (e) {
+        console.error("UserClient connection error:", e);
+    }
+
     try {
         await botClient.sendMessage(adminId, { 
-            message: "🤖 تم تشغيل السكربت بنجاح على Railway!\nأرسل /start لبدء تسجيل الدخول." 
+            message: "🤖 تم تشغيل السكربت بنجاح على Railway واستقرار الاتصال!\nأرسل /start لبدء تسجيل الدخول." 
         });
     } catch (e) {
         console.error("Error sending startup message:", e.message);
@@ -46,9 +63,6 @@ async function main() {
                 });
                 
                 try {
-                    if (!userClient.connected) {
-                        await userClient.connect();
-                    }
                     const res = await userClient.sendCode(
                         { apiId: apiId, apiHash: apiHash },
                         userState.phone
