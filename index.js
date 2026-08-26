@@ -1,4 +1,4 @@
-const { TelegramClient } = require("telegram");
+const { TelegramClient, Api } = require("telegram");
 const { StringSession } = require("telegram/sessions");
 
 // منع السكربت من الانهيار والانطفاء عند حدوث أي خطأ مفاجئ
@@ -9,7 +9,7 @@ process.on('uncaughtException', (error) => {
     console.error('Uncaught Exception:', error);
 });
 
-// قراءة البيانات من متغيرات البيئة في Railway
+// قراءة البيانات من متغيرات البيئة في Railway (بدون وضع أي توكنات في الكود)
 const apiId = parseInt(process.env.API_ID);
 const apiHash = process.env.API_HASH;
 const botToken = process.env.BOT_TOKEN;
@@ -87,14 +87,14 @@ async function main() {
                 await botClient.sendMessage(adminId, { message: "جاري التحقق وتسجيل الدخول..." });
                 
                 try {
-                    await userClient.signIn({
-                        apiId: apiId,
-                        apiHash: apiHash,
-                    }, {
-                        phoneNumber: userState.phone,
-                        phoneCode: code,
-                        phoneCodeHash: userState.phoneCodeHash,
-                    });
+                    // استخدام الطريقة الصحيحة والمستقرة في GramJS لتسجيل الدخول
+                    await userClient.invoke(
+                        new Api.auth.SignIn({
+                            phoneNumber: userState.phone,
+                            phoneCodeHash: userState.phoneCodeHash,
+                            phoneCode: code,
+                        })
+                    );
 
                     const me = await userClient.getMe();
                     const sessionString = userClient.session.save();
