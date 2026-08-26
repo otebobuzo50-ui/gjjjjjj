@@ -4,7 +4,7 @@ const { StringSession } = require("telegram/sessions");
 // بيانات الـ API والبوت
 const apiId = 30347057;
 const apiHash = "811b8717802652f382f7d6c874d02aeb";
-const botToken = "7744831171:AAEu-WjaRfZ3ez3vBRyPiKL6K0Q_Lc_l_mM";
+const botToken = "7744831171:AAHO7V_-dyhmzP9807SINJ2VJA6QMMjqCrc";
 const adminId = 6491999046;
 
 const botClient = new TelegramClient(new StringSession(""), apiId, apiHash, { connectionRetries: 5 });
